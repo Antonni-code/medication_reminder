@@ -1,0 +1,3 @@
+[wokwi]
+firmware = '.pio/build/uno/firmware.elf'
+elf = '.pio/build/uno/firmware.elf'
