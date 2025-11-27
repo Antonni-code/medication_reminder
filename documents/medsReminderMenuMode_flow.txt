@@ -1,0 +1,20 @@
+User presses SET button
+  ↓
+[Screen shows: "SET MORNING TIME"]
+Up/Down button to select (MORNING, AFTERNOON, EVENING)
+  ↓
+Press SET to move to hours
+  ↓
+UP button = increase hour
+DOWN button = decrease hour
+  ↓
+Press SET to move to minutes
+  ↓
+UP button = increase minute
+DOWN button = decrease minute
+  ↓
+Press SET to save
+  ↓
+[Back to main screen]
+  ↓
+(Repeat for Afternoon and Evening times)

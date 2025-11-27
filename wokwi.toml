@@ -1,3 +1,7 @@
 [wokwi]
 firmware = '.pio/build/uno/firmware.elf'
 elf = '.pio/build/uno/firmware.elf'
+
+# Enable audio for buzzer in VS Code
+[audio]
+enabled = true

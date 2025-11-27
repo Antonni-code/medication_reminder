@@ -1,0 +1,30 @@
+START
+  ↓
+[Default alarm times loaded: Morning 8AM, Afternoon 1PM, Evening 8PM]
+  ↓
+[Arduino checks time every second]
+  ↓
+Is SET button pressed? ──YES──> Go to MENU MODE
+  ↓ NO                           (see below)
+  ↓
+Is it time for any dose? (Morning/Afternoon/Evening)
+  ↓ NO → Display next dose time, keep checking
+  ↓ YES
+  ↓
+[ALARM TRIGGERED!]
+  ↓
+[Today's LED blinks] (e.g., Wednesday = LED #3)
+[Buzzer beeps]
+[Screen shows: "TAKE AFTERNOON DOSE!"]
+  ↓
+Wait for CONFIRM button...
+  ↓
+CONFIRM pressed? ──YES──> Turn off alarm
+  ↓ NO                     Log "taken"
+  ↓                        Show next dose
+Wait 15 minutes          Return to monitoring
+  ↓
+Still no button? ──YES──> Log "MISSED DOSE"
+  ↓                        Turn off alarm
+  ↓                        Return to monitoring
+REPEAT DAILY
