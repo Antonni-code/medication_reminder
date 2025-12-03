@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Medication Reminder - Updated Wiring (5 Buttons + Switch)</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            max-width: 1500px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        .badge {
+            display: inline-block;
+            background: #4CAF50;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin: 0 5px 20px 5px;
+        }
+        .badge.new {
+            background: #2196F3;
+        }
+        canvas {
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            display: block;
+            margin: 0 auto;
+            background: #f9f9f9;
+        }
+        .legend {
+            margin-top: 30px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 8px;
+        }
+        .color-box {
+            width: 30px;
+            height: 30px;
+            border-radius: 5px;
+            margin-right: 10px;
+            border: 2px solid #333;
+        }
+        .notes {
+            margin-top: 25px;
+            padding: 20px;
+            background: #fff3cd;
+            border-left: 5px solid #ffc107;
+            border-radius: 5px;
+        }
+        .notes h3 {
+            margin-top: 0;
+            color: #856404;
+        }
+        .notes ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .notes li {
+            margin: 8px 0;
+            color: #856404;
+        }
+        .feature-box {
+            margin-top: 20px;
+            padding: 20px;
+            background: #d4edda;
+            border-left: 5px solid #28a745;
+            border-radius: 5px;
+        }
+        .feature-box h3 {
+            margin-top: 0;
+            color: #155724;
+        }
+        .feature-box ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .feature-box li {
+            margin: 8px 0;
+            color: #155724;
+        }
+        .pin-table {
+            margin-top: 25px;
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .pin-table th, .pin-table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        .pin-table th {
+            background: #333;
+            color: white;
+        }
+        .pin-table tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+        .pin-table tr:hover {
+            background: #e9e9e9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Smart Medication Reminder Box - Wiring Diagram</h1>
+        <p class="subtitle">Complete System with Power Control & Menu Navigation</p>
+        <div style="text-align: center;">
+            <span class="badge">5 NAVIGATION BUTTONS</span>
+            <span class="badge new">+ ON/OFF POWER SWITCH</span>
+        </div>
+        
+        <canvas id="wiringCanvas" width="1440" height="1050"></canvas>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="color-box" style="background: #e74c3c;"></div>
+                <div><strong>Red = 5V Power</strong></div>
+            </div>
+            <div class="legend-item">
+                <div class="color-box" style="background: #2c3e50;"></div>
+                <div><strong>Black = Ground (GND)</strong></div>
+            </div>
+            <div class="legend-item">
+                <div class="color-box" style="background: #3498db;"></div>
+                <div><strong>Blue = SDA (Data)</strong></div>
+            </div>
+            <div class="legend-item">
+                <div class="color-box" style="background: #9b59b6;"></div>
+                <div><strong>Purple = SCL (Clock)</strong></div>
+            </div>
+            <div class="legend-item">
+                <div class="color-box" style="background: #f39c12;"></div>
+                <div><strong>Orange = Digital Signals</strong></div>
+            </div>
+            <div class="legend-item">
+                <div class="color-box" style="background: #e91e63;"></div>
+                <div><strong>Pink = Power Switch Line</strong></div>
+            </div>
+        </div>
+
+        <table class="pin-table">
+            <tr>
+                <th>Component</th>
+                <th>Arduino Pin</th>
+                <th>Notes</th>
+            </tr>
+            <tr>
+                <td>OLED Display (SDA)</td>
+                <td>A4</td>
+                <td>I2C Data - shared with RTC</td>
+            </tr>
+            <tr>
+                <td>OLED Display (SCL)</td>
+                <td>A5</td>
+                <td>I2C Clock - shared with RTC</td>
+            </tr>
+            <tr>
+                <td>RTC DS1307 (SDA)</td>
+                <td>A4</td>
+                <td>I2C Data - shared with OLED</td>
+            </tr>
+            <tr>
+                <td>RTC DS1307 (SCL)</td>
+                <td>A5</td>
+                <td>I2C Clock - shared with OLED</td>
+            </tr>
+            <tr>
+                <td>LED Monday</td>
+                <td>D2</td>
+                <td>220Ω resistor required</td>
+            </tr>
+            <tr>
+                <td>LED Tuesday</td>
+                <td>D3</td>
+                <td>220Ω resistor required</td>
+            </tr>
+            <tr>
+                <td>LED Wednesday</td>
+                <td>D4</td>
+                <td>220Ω resistor required</td>
+            </tr>
+            <tr>
+                <td>LED Thursday</td>
+                <td>D5</td>
+                <td>220Ω resistor required</td>
+            </tr>
+            <tr>
+                <td>LED Friday</td>
+                <td>D6</td>
+                <td>220Ω resistor required</td>
+            </tr>
+            <tr>
+                <td>LED Saturday</td>
+                <td>D7</td>
+                <td>220Ω resistor required</td>
+            </tr>
+            <tr>
+                <td>LED Sunday</td>
+                <td>D8</td>
+                <td>220Ω resistor required</td>
+            </tr>
+            <tr>
+                <td>Buzzer</td>
+                <td>D9</td>
+                <td>Active buzzer, 5V</td>
+            </tr>
+            <tr>
+                <td>UP Button</td>
+                <td>D10</td>
+                <td>10kΩ pull-up to 5V</td>
+            </tr>
+            <tr>
+                <td>DOWN Button</td>
+                <td>D11</td>
+                <td>10kΩ pull-up to 5V</td>
+            </tr>
+            <tr>
+                <td>SET Button</td>
+                <td>D12</td>
+                <td>10kΩ pull-up to 5V</td>
+            </tr>
+            <tr>
+                <td>CONFIRM Button</td>
+                <td>D13</td>
+                <td>10kΩ pull-up to 5V</td>
+            </tr>
+            <tr style="background: #e3f2fd;">
+                <td><strong>HOME Button (NEW)</strong></td>
+                <td><strong>A0</strong></td>
+                <td><strong>10kΩ pull-up to 5V - Exit menu/return home</strong></td>
+            </tr>
+            <tr style="background: #fce4ec;">
+                <td><strong>ON/OFF Switch (NEW)</strong></td>
+                <td><strong>N/A</strong></td>
+                <td><strong>Hardware switch - in power line before Arduino</strong></td>
+            </tr>
+        </table>
+
+        <div class="feature-box">
+            <h3>Button Functions:</h3>
+            <ul>
+                <li><strong>ON/OFF Switch:</strong> Hardware toggle - physically cuts power to entire system</li>
+                <li><strong>HOME Button (Pin A0):</strong> Exit menu mode without saving / Return to main display</li>
+                <li><strong>UP Button (Pin 10):</strong> Navigate up in menu / Increase hour or minute</li>
+                <li><strong>DOWN Button (Pin 11):</strong> Navigate down in menu / Decrease hour or minute</li>
+                <li><strong>SET Button (Pin 12):</strong> Enter menu / Save settings / Move to next field</li>
+                <li><strong>CONFIRM Button (Pin 13):</strong> Confirm medication taken / Acknowledge alarm</li>
+            </ul>
+        </div>
+
+        <div class="notes">
+            <h3>Important Notes:</h3>
+            <ul>
+                <li><strong>ON/OFF Switch:</strong> SPST toggle switch in the 5V line BEFORE Arduino - no pin needed</li>
+                <li><strong>HOME Button:</strong> Uses analog pin A0 as digital input - same wiring as other buttons</li>
+                <li><strong>5 Buttons Total:</strong> UP, DOWN, SET, CONFIRM (pins 10-13) + HOME (pin A0)</li>
+                <li><strong>Button Wiring:</strong> One leg to Arduino pin, other leg to GND, 10kΩ resistor to 5V</li>
+                <li><strong>I2C Devices:</strong> OLED and RTC share SDA (A4) and SCL (A5) - this is normal</li>
+                <li><strong>LED Direction:</strong> Long leg (anode) to Arduino pin through 220Ω resistor, short leg to GND</li>
+                <li><strong>Default Times:</strong> Morning 8:00 AM, Afternoon 1:00 PM, Evening 8:00 PM</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('wiringCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const colors = {
+            power: '#e74c3c',
+            ground: '#2c3e50',
+            sda: '#3498db',
+            scl: '#9b59b6',
+            signal: '#f39c12',
+            component: '#ecf0f1',
+            arduino: '#00979D',
+            text: '#2c3e50',
+            button: '#4CAF50',
+            homeBtn: '#2196F3',
+            powerSwitch: '#e91e63'
+        };
+
+        // Draw Arduino Uno
+        function drawArduino(x, y) {
+            ctx.fillStyle = colors.arduino;
+            ctx.fillRect(x, y, 180, 300);
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(x, y, 180, 300);
+            
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 20px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('ARDUINO', x + 90, y + 30);
+            ctx.fillText('UNO', x + 90, y + 50);
+            
+            // USB port
+            ctx.fillStyle = '#555';
+            ctx.fillRect(x + 60, y - 10, 60, 15);
+            
+            // Power jack
+            ctx.fillStyle = '#333';
+            ctx.beginPath();
+            ctx.arc(x + 30, y + 30, 8, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Digital pins (right side) - pins 2-13
+            ctx.fillStyle = 'white';
+            ctx.font = '10px Arial';
+            ctx.textAlign = 'left';
+            const digitalPins = ['2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13'];
+            digitalPins.forEach((pin, i) => {
+                const py = y + 80 + (i * 15);
+                ctx.fillStyle = '#333';
+                ctx.fillRect(x + 180, py, 30, 8);
+                ctx.fillStyle = 'white';
+                ctx.fillText(pin, x + 188, py + 7);
+            });
+            
+            // Analog pins (bottom) - A0-A5
+            ctx.textAlign = 'center';
+            const analogPins = ['A0', 'A1', 'A2', 'A3', 'A4', 'A5'];
+            analogPins.forEach((pin, i) => {
+                const px = x + 20 + (i * 25);
+                ctx.fillStyle = '#333';
+                ctx.fillRect(px, y + 300, 20, 30);
+                ctx.fillStyle = 'white';
+                ctx.font = '9px Arial';
+                ctx.fillText(pin, px + 10, y + 315);
+            });
+            
+            // Power pins (left side)
+            ctx.textAlign = 'right';
+            const powerPins = ['5V', 'GND', 'GND', 'VIN'];
+            powerPins.forEach((pin, i) => {
+                const py = y + 80 + (i * 20);
+                ctx.fillStyle = '#333';
+                ctx.fillRect(x - 30, py, 30, 12);
+                ctx.fillStyle = 'white';
+                ctx.font = '10px Arial';
+                ctx.fillText(pin, x - 5, py + 9);
+            });
+        }
+
+        // Draw component box
+        function drawComponent(x, y, width, height, label, sublabel = '') {
+            ctx.fillStyle = colors.component;
+            ctx.fillRect(x, y, width, height);
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(x, y, width, height);
+            
+            ctx.fillStyle = colors.text;
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(label, x + width/2, y + height/2 - 5);
+            
+            if (sublabel) {
+                ctx.font = '11px Arial';
+                ctx.fillText(sublabel, x + width/2, y + height/2 + 10);
+            }
+        }
+
+        // Draw ON/OFF Switch
+        function drawPowerSwitch(x, y) {
+            // Switch body
+            ctx.fillStyle = colors.powerSwitch;
+            ctx.fillRect(x, y, 80, 45);
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(x, y, 80, 45);
+            
+            // Toggle lever
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(x + 45, y + 8, 25, 29);
+            ctx.strokeRect(x + 45, y + 8, 25, 29);
+            
+            // Labels
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 11px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('ON/OFF', x + 40, y + 27);
+            
+            ctx.fillStyle = colors.text;
+            ctx.font = '10px Arial';
+            ctx.fillText('SPST Switch', x + 40, y + 60);
+            
+            // Connection terminals
+            drawPin(x, y + 22, colors.powerSwitch);
+            drawPin(x + 80, y + 22, colors.power);
+        }
+
+        // Draw wire with better routing
+        function drawWire(x1, y1, x2, y2, color, label = '') {
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            
+            if (Math.abs(x2 - x1) > Math.abs(y2 - y1)) {
+                const midX = (x1 + x2) / 2;
+                ctx.lineTo(midX, y1);
+                ctx.lineTo(midX, y2);
+            } else {
+                const midY = (y1 + y2) / 2;
+                ctx.lineTo(x1, midY);
+                ctx.lineTo(x2, midY);
+            }
+            
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+            
+            if (label) {
+                ctx.fillStyle = 'white';
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 4;
+                const midX = (x1 + x2) / 2;
+                const midY = (y1 + y2) / 2;
+                ctx.font = 'bold 11px Arial';
+                ctx.textAlign = 'center';
+                ctx.strokeText(label, midX, midY - 5);
+                ctx.fillText(label, midX, midY - 5);
+            }
+        }
+
+        // Draw pin connection dot
+        function drawPin(x, y, color) {
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(x, y, 5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        }
+
+        // Draw button with resistor
+        function drawButton(x, y, label, icon, btnColor = colors.button) {
+            ctx.fillStyle = btnColor;
+            ctx.fillRect(x, y, 70, 50);
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(x, y, 70, 50);
+            
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(icon, x + 35, y + 22);
+            ctx.font = '10px Arial';
+            ctx.fillText(label, x + 35, y + 38);
+            
+            // Resistor on top
+            ctx.strokeStyle = '#D2691E';
+            ctx.lineWidth = 6;
+            ctx.beginPath();
+            ctx.moveTo(x + 35, y - 5);
+            ctx.lineTo(x + 35, y - 30);
+            ctx.stroke();
+            
+            // Resistor stripes
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            for (let j = 0; j < 3; j++) {
+                ctx.beginPath();
+                ctx.moveTo(x + 28, y - 10 - (j * 5));
+                ctx.lineTo(x + 42, y - 10 - (j * 5));
+                ctx.stroke();
+            }
+            
+            ctx.fillStyle = colors.text;
+            ctx.font = '9px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText('10kΩ', x + 45, y - 15);
+        }
+
+        // Main drawing
+        const arduinoX = 600;
+        const arduinoY = 280;
+        
+        // Draw Arduino
+        drawArduino(arduinoX, arduinoY);
+        
+        // Draw ON/OFF Switch (top left - in power line)
+        drawPowerSwitch(80, 50);
+        
+        // Power source label
+        ctx.fillStyle = colors.text;
+        ctx.font = 'bold 12px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('POWER IN', 40, 72);
+        ctx.fillText('(USB/DC)', 40, 87);
+        
+        // Draw OLED Display
+        drawComponent(100, 150, 120, 80, 'OLED Display', '128x64 I2C');
+        drawPin(220, 180, colors.power);
+        drawPin(220, 195, colors.ground);
+        drawPin(220, 210, colors.sda);
+        drawPin(220, 225, colors.scl);
+        
+        // Draw RTC Module
+        drawComponent(100, 270, 120, 80, 'RTC Module', 'DS1307');
+        drawPin(220, 300, colors.power);
+        drawPin(220, 315, colors.ground);
+        drawPin(220, 330, colors.sda);
+        drawPin(220, 345, colors.scl);
+        
+        // Draw LEDs (7 in a row)
+        const ledStartX = 920;
+        const ledY = 120;
+        const days = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+        for (let i = 0; i < 7; i++) {
+            const x = ledStartX + (i * 55);
+            
+            ctx.fillStyle = '#ffeb3b';
+            ctx.beginPath();
+            ctx.arc(x, ledY, 12, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            ctx.fillStyle = colors.text;
+            ctx.font = 'bold 10px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(days[i], x, ledY + 28);
+            
+            // Resistor
+            ctx.strokeStyle = '#D2691E';
+            ctx.lineWidth = 6;
+            ctx.beginPath();
+            ctx.moveTo(x, ledY + 15);
+            ctx.lineTo(x, ledY + 38);
+            ctx.stroke();
+            
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            for (let j = 0; j < 3; j++) {
+                ctx.beginPath();
+                ctx.moveTo(x - 5, ledY + 20 + (j * 5));
+                ctx.lineTo(x + 5, ledY + 20 + (j * 5));
+                ctx.stroke();
+            }
+            
+            ctx.fillStyle = colors.text;
+            ctx.font = '8px Arial';
+            ctx.fillText('220Ω', x, ledY + 52);
+            
+            drawPin(x, ledY - 12, colors.signal);
+            drawPin(x, ledY + 40, colors.ground);
+        }
+        
+        // Draw Buzzer
+        drawComponent(970, 380, 100, 60, 'Buzzer', '5V Active');
+        drawPin(1070, 400, colors.power);
+        drawPin(1070, 415, colors.ground);
+        drawPin(1070, 430, colors.signal);
+        
+        // Draw 4 original buttons
+        const buttonY = 520;
+        const buttonLabels = [
+            { label: 'UP', icon: '↑', x: 920 },
+            { label: 'DOWN', icon: '↓', x: 1010 },
+            { label: 'SET', icon: '⚙', x: 1100 },
+            { label: 'CONFIRM', icon: '✓', x: 1190 }
+        ];
+        
+        buttonLabels.forEach((btn, i) => {
+            drawButton(btn.x, buttonY, btn.label, btn.icon);
+            drawPin(btn.x + 35, buttonY + 50, colors.signal);
+            drawPin(btn.x + 35, buttonY + 70, colors.ground);
+            drawPin(btn.x + 35, buttonY - 30, colors.power);
+        });
+        
+        // Draw HOME button (new - blue color, different position)
+        const homeX = 100;
+        const homeY = 420;
+        drawButton(homeX, homeY, 'HOME', '⌂', colors.homeBtn);
+        drawPin(homeX + 35, homeY + 50, colors.signal);
+        drawPin(homeX + 35, homeY + 70, colors.ground);
+        drawPin(homeX + 35, homeY - 30, colors.power);
+        
+        // HOME button highlight
+        ctx.strokeStyle = colors.homeBtn;
+        ctx.lineWidth = 3;
+        ctx.setLineDash([5, 5]);
+        ctx.strokeRect(homeX - 15, homeY - 45, 100, 145);
+        ctx.setLineDash([]);
+        
+        ctx.fillStyle = colors.homeBtn;
+        ctx.font = 'bold 12px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('NEW: HOME', homeX + 35, homeY - 55);
+        ctx.fillText('(Pin A0)', homeX + 35, homeY + 95);
+        
+        // Draw breadboard
+        ctx.fillStyle = '#F5DEB3';
+        ctx.fillRect(380, 720, 550, 150);
+        ctx.strokeStyle = '#333';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(380, 720, 550, 150);
+        
+        ctx.fillStyle = colors.text;
+        ctx.font = 'bold 16px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('BREADBOARD', 655, 750);
+        ctx.font = '12px Arial';
+        ctx.fillText('(Use power rails for 5V and GND distribution)', 655, 770);
+        
+        // Power rails
+        ctx.fillStyle = colors.power;
+        ctx.fillRect(400, 800, 500, 15);
+        ctx.fillStyle = 'white';
+        ctx.font = 'bold 11px Arial';
+        ctx.fillText('+ RAIL (5V)', 550, 811);
+        
+        ctx.fillStyle = colors.ground;
+        ctx.fillRect(400, 830, 500, 15);
+        ctx.fillStyle = 'white';
+        ctx.fillText('- RAIL (GND)', 550, 841);
+        
+        // Draw connections
+        
+        // Power switch to Arduino 5V (through breadboard)
+        drawWire(160, 72, 400, 72, colors.powerSwitch, 'Switched 5V');
+        drawWire(400, 72, 400, 805, colors.power);
+        
+        // Arduino 5V to breadboard
+        drawWire(arduinoX - 30, arduinoY + 80, 550, 805, colors.power, '5V');
+        
+        // Arduino GND to breadboard
+        drawWire(arduinoX - 30, arduinoY + 100, 550, 837, colors.ground, 'GND');
+        
+        // OLED connections
+        drawWire(220, 180, 420, 805, colors.power);
+        drawWire(220, 195, 420, 837, colors.ground);
+        drawWire(220, 210, arduinoX + 95, arduinoY + 300, colors.sda, 'A4');
+        drawWire(220, 225, arduinoX + 120, arduinoY + 300, colors.scl, 'A5');
+        
+        // RTC connections
+        drawWire(220, 300, 440, 805, colors.power);
+        drawWire(220, 315, 440, 837, colors.ground);
+        drawWire(220, 330, arduinoX + 95, arduinoY + 300, colors.sda);
+        drawWire(220, 345, arduinoX + 120, arduinoY + 300, colors.scl);
+        
+        // LED connections
+        for (let i = 0; i < 7; i++) {
+            const x = ledStartX + (i * 55);
+            const pinNum = 2 + i;
+            const pinY = arduinoY + 80 + (pinNum - 2) * 15;
+            drawWire(x, ledY - 12, arduinoX + 210, pinY + 4, colors.signal, pinNum.toString());
+            drawWire(x, ledY + 40, 680, 837, colors.ground);
+        }
+        
+        // Buzzer connections
+        drawWire(1070, 400, 700, 805, colors.power);
+        drawWire(1070, 415, 700, 837, colors.ground);
+        drawWire(1070, 430, arduinoX + 210, arduinoY + 80 + 7 * 15 + 4, colors.signal, '9');
+        
+        // Original 4 button connections (pins 10-13)
+        buttonLabels.forEach((btn, i) => {
+            const pinNum = 10 + i;
+            const pinY = arduinoY + 80 + (pinNum - 2) * 15;
+            drawWire(btn.x + 35, buttonY + 50, arduinoX + 210, pinY + 4, colors.signal, pinNum.toString());
+            drawWire(btn.x + 35, buttonY + 70, 720 + (i * 20), 837, colors.ground);
+            drawWire(btn.x + 35, buttonY - 30, 720 + (i * 20), 805, colors.power);
+        });
+        
+        // HOME button connections (pin A0)
+        drawWire(homeX + 35, homeY + 50, arduinoX + 20, arduinoY + 300, colors.signal, 'A0');
+        drawWire(homeX + 35, homeY + 70, 460, 837, colors.ground);
+        drawWire(homeX + 35, homeY - 30, 460, 805, colors.power);
+        
+        // Connection notes
+        ctx.fillStyle = colors.text;
+        ctx.font = '12px Arial';
+        ctx.textAlign = 'left';
+        ctx.fillText('✓ ON/OFF switch in power line - physically disconnects power to system', 50, 920);
+        ctx.fillText('✓ HOME button on pin A0 - analog pin used as digital input', 50, 940);
+        ctx.fillText('✓ Both OLED & RTC share A4 (SDA) and A5 (SCL)', 50, 960);
+        ctx.fillText('✓ Each button has 3 connections: Arduino pin, GND, and 5V through 10kΩ resistor', 50, 980);
+        ctx.fillText('✓ LEDs: Long leg → Arduino pin (through 220Ω), Short leg → GND', 50, 1000);
+        
+        // Button panel highlight
+        ctx.strokeStyle = colors.button;
+        ctx.lineWidth = 3;
+        ctx.setLineDash([5, 5]);
+        ctx.strokeRect(900, 480, 380, 180);
+        ctx.setLineDash([]);
+        
+        ctx.fillStyle = colors.button;
+        ctx.font = 'bold 14px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('4 NAVIGATION BUTTONS (Pins 10-13)', 1090, 470);
+        
+        // Power switch highlight
+        ctx.strokeStyle = colors.powerSwitch;
+        ctx.lineWidth = 3;
+        ctx.setLineDash([5, 5]);
+        ctx.strokeRect(60, 35, 120, 90);
+        ctx.setLineDash([]);
+        
+        ctx.fillStyle = colors.powerSwitch;
+        ctx.font = 'bold 12px Arial';
+        ctx.fillText('NEW: POWER CONTROL', 120, 145);
+        
+    </script>
+</body>
+</html>

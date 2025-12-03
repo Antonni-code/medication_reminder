@@ -1,0 +1,652 @@
+================================================================================
+    MEDICATION REMINDER SYSTEM - ARCHITECTURAL DESIGN DOCUMENT
+================================================================================
+
+Project: Smart Medication Reminder with Next.js Dashboard
+Date: December 3, 2025
+Version: 1.0
+
+================================================================================
+1. SYSTEM OVERVIEW
+================================================================================
+
+This system consists of THREE main components:
+
+[Arduino Device] <---> [Cloud Service] <---> [Next.js Dashboard (Vercel)]
+
+- Arduino Device: Physical hardware OR Wokwi simulator
+- Cloud Service: Firebase Realtime Database (middleware for communication)
+- Next.js Dashboard: Web interface for control and monitoring
+
+================================================================================
+2. CURRENT ARDUINO LOGIC (PRESERVED)
+================================================================================
+
+Core Features (DO NOT MODIFY):
+- 3 Daily Alarms: Morning (8:00 AM), Afternoon (1:00 PM), Evening (8:00 PM)
+- RTC Module (DS1307) for accurate timekeeping
+- OLED Display (128x64) for visual feedback
+- 7 LEDs for day-of-week indication
+- Buzzer for audio alerts
+- 4 Buttons: Up, Down, Set, Confirm
+- EEPROM storage for alarm persistence
+- Menu system for alarm editing
+
+LED Day Mapping (CORRECT):
+- Pin2=RED(SUN), Pin3=GREEN(MON), Pin4=BLUE(TUE), Pin5=YELLOW(WED)
+- Pin6=ORANGE(THU), Pin7=PURPLE(FRI), Pin8=CYAN(SAT)
+- Current day LED stays ON, blinks during alarm
+
+Alarm Behavior (KEEP INTACT):
+1. Urgent Phase (1 minute): Buzzer beeps (200ms ON, 800ms OFF)
+2. Snooze Phase (14 minutes): Brief beeps every 2 minutes
+3. Timeout: Display "MISSED DOSE" after 15 minutes total
+4. Confirm Button: User acknowledges taking medication
+
+================================================================================
+3. TECHNOLOGY STACK
+================================================================================
+
+Frontend (Next.js Dashboard):
+- Framework: Next.js 14 (App Router)
+- Language: TypeScript
+- Styling: Tailwind CSS
+- UI Components: shadcn/ui (Radix UI primitives)
+- State Management: React Context + Hooks
+- Charts: Recharts (for medication adherence graphs)
+- Deployment: Vercel
+
+Backend/API:
+- Next.js API Routes (serverless functions on Vercel)
+- Firebase Realtime Database (data sync)
+- Firebase Admin SDK (server-side operations)
+
+Arduino:
+- Current: Arduino Uno (Wokwi simulation)
+- Future: ESP32 (WiFi-enabled for cloud connectivity)
+- Communication: HTTP REST API or MQTT
+- Libraries: ArduinoJson, WiFiClientSecure
+
+================================================================================
+4. SYSTEM ARCHITECTURE
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         USER INTERFACE LAYER                            │
+│                                                                         │
+│  ┌───────────────────────────────────────────────────────────────┐    │
+│  │         Next.js Dashboard (Vercel - Any Device)              │    │
+│  │                                                               │    │
+│  │  - Alarm Configuration Page                                  │    │
+│  │  - Real-time Status Monitor                                  │    │
+│  │  - Medication Log/History                                    │    │
+│  │  - Adherence Statistics & Charts                             │    │
+│  │  - Device Settings                                           │    │
+│  │                                                               │    │
+│  │  Responsive Design: Desktop, Tablet, Mobile                  │    │
+│  └───────────────────────────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────────────────────────┘
+                                    ↕
+                        HTTPS REST API / WebSocket
+                                    ↕
+┌─────────────────────────────────────────────────────────────────────────┐
+│                      APPLICATION LAYER (Vercel)                         │
+│                                                                         │
+│  ┌────────────────────────────────────────────────────────────┐        │
+│  │              Next.js API Routes (Serverless)               │        │
+│  │                                                             │        │
+│  │  - POST /api/alarms/update   → Update alarm settings      │        │
+│  │  - GET  /api/alarms          → Fetch current alarms       │        │
+│  │  - POST /api/logs            → Record dose events         │        │
+│  │  - GET  /api/logs            → Fetch medication history   │        │
+│  │  - GET  /api/status          → Device online status       │        │
+│  │  - POST /api/device/sync     → Manual sync trigger        │        │
+│  └────────────────────────────────────────────────────────────┘        │
+└─────────────────────────────────────────────────────────────────────────┘
+                                    ↕
+                         Firebase Admin SDK
+                                    ↕
+┌─────────────────────────────────────────────────────────────────────────┐
+│                      DATA LAYER (Firebase Cloud)                        │
+│                                                                         │
+│  ┌────────────────────────────────────────────────────────────┐        │
+│  │           Firebase Realtime Database Structure             │        │
+│  │                                                             │        │
+│  │  /devices/{deviceId}/                                      │        │
+│  │    ├─ alarms/                                              │        │
+│  │    │   ├─ 0: {hour: 8, minute: 0, enabled: true}          │        │
+│  │    │   ├─ 1: {hour: 13, minute: 0, enabled: true}         │        │
+│  │    │   └─ 2: {hour: 20, minute: 0, enabled: true}         │        │
+│  │    ├─ status/                                              │        │
+│  │    │   ├─ online: true                                     │        │
+│  │    │   ├─ lastSeen: "2025-12-03T10:30:00Z"                │        │
+│  │    │   └─ currentAlarmActive: false                        │        │
+│  │    └─ logs/                                                │        │
+│  │        └─ {timestamp}/                                     │        │
+│  │            ├─ doseIndex: 0 (Morning/Afternoon/Evening)     │        │
+│  │            ├─ scheduledTime: "08:00"                       │        │
+│  │            ├─ takenTime: "08:02"                           │        │
+│  │            ├─ status: "taken" | "late" | "missed"         │        │
+│  │            └─ date: "2025-12-03"                           │        │
+│  └────────────────────────────────────────────────────────────┘        │
+└─────────────────────────────────────────────────────────────────────────┘
+                                    ↕
+                    Firebase Client SDK / REST API
+                                    ↕
+┌─────────────────────────────────────────────────────────────────────────┐
+│                      DEVICE LAYER (Arduino/ESP32)                       │
+│                                                                         │
+│  ┌─────────────────┐        ┌────────────────────────────────┐        │
+│  │  Arduino Uno    │        │         ESP32                  │        │
+│  │  (Wokwi Sim)    │   OR   │     (Physical Device)          │        │
+│  │                 │        │                                 │        │
+│  │  - Development  │        │  - WiFi Connectivity            │        │
+│  │  - Testing      │        │  - HTTPS requests to Firebase   │        │
+│  │  - UI Demo      │        │  - Real-time alarm sync         │        │
+│  │  - No Network   │        │  - Log medication events        │        │
+│  └─────────────────┘        └────────────────────────────────┘        │
+│                                                                         │
+│  Core Logic (UNCHANGED):                                               │
+│  - RTC timekeeping                                                     │
+│  - Alarm checking every loop                                           │
+│  - Buzzer + LED alerts                                                 │
+│  - OLED display updates                                                │
+│  - Button input handling                                               │
+│  - EEPROM persistence                                                  │
+└─────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+5. DATA FLOW DIAGRAMS
+================================================================================
+
+5.1 ALARM UPDATE FLOW (Dashboard → Arduino)
+────────────────────────────────────────────
+
+User (Dashboard) → Next.js API → Firebase → ESP32 → Arduino Logic
+
+1. User changes alarm time in dashboard (e.g., Morning: 8:00 → 8:30)
+2. Dashboard sends PUT /api/alarms/update
+3. API validates data, writes to Firebase /devices/{id}/alarms
+4. Firebase triggers real-time listener on ESP32
+5. ESP32 reads new alarm data
+6. ESP32 updates local alarm array + EEPROM
+7. Arduino continues normal operation with new alarm time
+
+
+5.2 MEDICATION EVENT FLOW (Arduino → Dashboard)
+────────────────────────────────────────────────
+
+Arduino Alarm → ESP32 → Firebase → Next.js API → Dashboard Update
+
+1. Arduino RTC detects alarm time match
+2. Arduino triggers alarm (buzzer, LED, display)
+3. User presses Confirm button
+4. Arduino logs event: {dose: 0, status: "taken", time: "08:02"}
+5. ESP32 sends POST request to Firebase /logs
+6. Firebase stores log entry with timestamp
+7. Dashboard auto-refreshes, shows new entry in history
+8. Adherence statistics update automatically
+
+
+5.3 REAL-TIME STATUS SYNC
+──────────────────────────
+
+ESP32 ←→ Firebase ←→ Next.js Dashboard
+
+Every 60 seconds:
+- ESP32 sends heartbeat: {online: true, lastSeen: timestamp}
+- Dashboard listens to Firebase /status node
+- Shows green "Online" indicator if lastSeen < 2 minutes ago
+- Shows red "Offline" indicator otherwise
+
+During Alarm:
+- ESP32 updates: {currentAlarmActive: true, alarmIndex: 0}
+- Dashboard shows live alert: "Morning dose alarm active!"
+
+================================================================================
+6. FIREBASE DATABASE SCHEMA
+================================================================================
+
+Root Structure:
+/
+├─ devices/
+│   └─ {deviceId}/           (e.g., "arduino_001")
+│       ├─ info/
+│       │   ├─ name: "Living Room Reminder"
+│       │   ├─ location: "Home"
+│       │   └─ createdAt: "2025-12-01T00:00:00Z"
+│       │
+│       ├─ alarms/
+│       │   ├─ 0/
+│       │   │   ├─ hour: 8
+│       │   │   ├─ minute: 0
+│       │   │   ├─ enabled: true
+│       │   │   └─ label: "Morning"
+│       │   ├─ 1/
+│       │   │   ├─ hour: 13
+│       │   │   ├─ minute: 0
+│       │   │   ├─ enabled: true
+│       │   │   └─ label: "Afternoon"
+│       │   └─ 2/
+│       │       ├─ hour: 20
+│       │       ├─ minute: 0
+│       │       ├─ enabled: true
+│       │       └─ label: "Evening"
+│       │
+│       ├─ status/
+│       │   ├─ online: true
+│       │   ├─ lastSeen: 1733227800000  (Unix timestamp)
+│       │   ├─ currentAlarmActive: false
+│       │   ├─ activeAlarmIndex: null
+│       │   └─ rtcTime: "2025-12-03T10:30:00Z"
+│       │
+│       └─ logs/
+│           ├─ 20251203_080200/
+│           │   ├─ date: "2025-12-03"
+│           │   ├─ doseIndex: 0
+│           │   ├─ doseLabel: "Morning"
+│           │   ├─ scheduledTime: "08:00"
+│           │   ├─ actualTime: "08:02"
+│           │   ├─ status: "taken"        (taken | late | missed)
+│           │   ├─ delayMinutes: 2
+│           │   └─ timestamp: 1733220120000
+│           ├─ 20251203_130500/
+│           │   ├─ date: "2025-12-03"
+│           │   ├─ doseIndex: 1
+│           │   ├─ doseLabel: "Afternoon"
+│           │   ├─ scheduledTime: "13:00"
+│           │   ├─ actualTime: "13:05"
+│           │   ├─ status: "late"
+│           │   ├─ delayMinutes: 5
+│           │   └─ timestamp: 1733238300000
+│           └─ 20251203_200000/
+│               ├─ date: "2025-12-03"
+│               ├─ doseIndex: 2
+│               ├─ doseLabel: "Evening"
+│               ├─ scheduledTime: "20:00"
+│               ├─ actualTime: null
+│               ├─ status: "missed"
+│               ├─ delayMinutes: null
+│               └─ timestamp: 1733263200000
+│
+└─ users/
+    └─ {userId}/
+        ├─ email: "user@example.com"
+        ├─ devices: ["arduino_001"]
+        └─ settings/
+            ├─ notifications: true
+            └─ timezone: "America/New_York"
+
+================================================================================
+7. NEXT.JS DASHBOARD PAGES
+================================================================================
+
+7.1 Dashboard Home (/)
+──────────────────────
+- Current time display
+- Device online status indicator
+- Today's upcoming alarms (with countdown)
+- Quick statistics: adherence rate this week
+- Recent activity feed (last 5 events)
+
+7.2 Alarms Page (/alarms)
+─────────────────────────
+- List of 3 alarms with toggle switches (enable/disable)
+- Time pickers for each alarm (Morning, Afternoon, Evening)
+- Save button → triggers API update → syncs to Arduino
+- Test alarm button (triggers buzzer remotely)
+
+7.3 History/Logs Page (/history)
+────────────────────────────────
+- Filterable table: Date | Dose | Scheduled | Actual | Status
+- Date range picker
+- Export to CSV button
+- Color-coded status: Green (taken), Yellow (late), Red (missed)
+
+7.4 Statistics Page (/stats)
+────────────────────────────
+- Weekly adherence chart (line graph)
+- Monthly calendar heatmap
+- Average delay time
+- Missed dose alerts
+- Streaks: consecutive days without missed doses
+
+7.5 Settings Page (/settings)
+─────────────────────────────
+- Device name/location
+- Time zone selection
+- Notification preferences
+- Arduino connection status
+- Manual sync button
+
+================================================================================
+8. API ENDPOINTS SPECIFICATION
+================================================================================
+
+8.1 GET /api/alarms
+───────────────────
+Response:
+{
+  "success": true,
+  "data": [
+    {"index": 0, "hour": 8, "minute": 0, "enabled": true, "label": "Morning"},
+    {"index": 1, "hour": 13, "minute": 0, "enabled": true, "label": "Afternoon"},
+    {"index": 2, "hour": 20, "minute": 0, "enabled": true, "label": "Evening"}
+  ]
+}
+
+8.2 PUT /api/alarms
+───────────────────
+Request:
+{
+  "deviceId": "arduino_001",
+  "alarms": [
+    {"index": 0, "hour": 8, "minute": 30, "enabled": true}
+  ]
+}
+
+Response:
+{
+  "success": true,
+  "message": "Alarms updated successfully",
+  "synced": true
+}
+
+8.3 GET /api/logs?startDate=2025-12-01&endDate=2025-12-03
+──────────────────────────────────────────────────────────
+Response:
+{
+  "success": true,
+  "data": [
+    {
+      "id": "20251203_080200",
+      "date": "2025-12-03",
+      "doseIndex": 0,
+      "doseLabel": "Morning",
+      "scheduledTime": "08:00",
+      "actualTime": "08:02",
+      "status": "taken",
+      "delayMinutes": 2
+    }
+  ],
+  "count": 1
+}
+
+8.4 POST /api/logs
+──────────────────
+Request (sent by Arduino):
+{
+  "deviceId": "arduino_001",
+  "doseIndex": 0,
+  "scheduledTime": "08:00",
+  "actualTime": "08:02",
+  "status": "taken"
+}
+
+Response:
+{
+  "success": true,
+  "logId": "20251203_080200"
+}
+
+8.5 GET /api/status
+───────────────────
+Response:
+{
+  "success": true,
+  "data": {
+    "online": true,
+    "lastSeen": "2025-12-03T10:30:00Z",
+    "currentAlarmActive": false,
+    "rtcTime": "2025-12-03T10:30:00Z"
+  }
+}
+
+================================================================================
+9. ARDUINO CODE MODIFICATIONS (MINIMAL)
+================================================================================
+
+Changes Required for ESP32 Connectivity:
+─────────────────────────────────────────
+
+File: src/main.cpp (ADD WiFi section, KEEP all existing logic)
+
+NEW Additions:
+1. WiFi connection setup in setup()
+2. Firebase sync function (non-blocking)
+3. checkFirebaseAlarms() - runs every 60 seconds
+4. sendLogToFirebase() - called after dose taken/missed
+5. sendHeartbeat() - every 60 seconds
+
+IMPORTANT:
+- All existing alarm logic remains UNCHANGED
+- Firebase sync runs ALONGSIDE existing EEPROM system
+- If WiFi fails, Arduino continues working offline
+- Local alarms stored in EEPROM are primary source
+- Firebase sync is secondary/optional feature
+
+Pseudo-code structure:
+
+void loop() {
+  // EXISTING CODE (unchanged)
+  DateTime now = rtc.now();
+
+  if (menu != NORMAL) {
+    handleMenu();
+  } else {
+    showNormal(now);
+
+    // EXISTING alarm check
+    uint8_t alarmIdx;
+    if (checkAlarm(now, alarmIdx)) {
+      triggerAlarm(alarmIdx);
+    }
+  }
+
+  // NEW: Non-blocking Firebase sync (only if WiFi connected)
+  static unsigned long lastSync = 0;
+  if (millis() - lastSync > 60000) {  // Every 60 seconds
+    if (WiFi.status() == WL_CONNECTED) {
+      checkFirebaseAlarms();  // Update alarms if changed
+      sendHeartbeat();        // Update online status
+    }
+    lastSync = millis();
+  }
+
+  delay(100);
+}
+
+================================================================================
+10. DEPLOYMENT STRATEGY
+================================================================================
+
+Phase 1: Dashboard Development (Current - No Physical Arduino)
+───────────────────────────────────────────────────────────────
+✓ Set up Next.js project locally
+✓ Create Firebase project + Realtime Database
+✓ Build all dashboard pages (alarms, history, stats)
+✓ Implement API routes with Firebase Admin SDK
+✓ Deploy to Vercel
+✓ Test with MANUAL Firebase data entry (simulate Arduino)
+✓ Use Wokwi for UI/logic testing (no network features)
+
+Phase 2: Arduino WiFi Integration (After Getting ESP32)
+────────────────────────────────────────────────────────
+✓ Migrate code to ESP32 board
+✓ Add WiFi connection code
+✓ Implement Firebase HTTP requests (GET/POST)
+✓ Test alarm sync: Dashboard → Firebase → ESP32
+✓ Test log upload: ESP32 → Firebase → Dashboard
+✓ Verify offline fallback (EEPROM continues working)
+
+Phase 3: Production Deployment (Final)
+───────────────────────────────────────
+✓ Set up Firebase security rules
+✓ Add user authentication (Firebase Auth)
+✓ Configure Vercel environment variables
+✓ Set up domain (optional)
+✓ Monitor with Firebase Console + Vercel Analytics
+
+================================================================================
+11. DEVELOPMENT WORKFLOW (NO PHYSICAL ARDUINO YET)
+================================================================================
+
+Step 1: Initialize Next.js Project
+   → npx create-next-app@latest medication-dashboard
+   → Install dependencies: Firebase, Tailwind, shadcn/ui
+
+Step 2: Set Up Firebase
+   → Create Firebase project
+   → Enable Realtime Database
+   → Generate service account key (for Vercel)
+   → Manually add test data to database
+
+Step 3: Build Dashboard Pages
+   → Create layout with navigation
+   → Implement alarm configuration UI
+   → Build history table with filters
+   → Add statistics charts
+
+Step 4: Connect to Firebase
+   → Create API routes in /app/api
+   → Test GET/PUT endpoints with Postman
+   → Connect frontend to API routes
+   → Verify real-time updates
+
+Step 5: Deploy to Vercel
+   → Push to GitHub
+   → Connect Vercel to repository
+   → Add Firebase secrets as environment variables
+   → Test production deployment
+
+Step 6: Test with Wokwi (Offline)
+   → Continue using existing Wokwi simulation
+   → Manually sync alarm changes via Firebase Console
+   → Verify dashboard displays correct data
+
+Step 7: Wait for ESP32 Hardware
+   → When hardware arrives, proceed to Phase 2
+   → Add WiFi code to Arduino sketch
+   → Flash to ESP32 and test end-to-end
+
+================================================================================
+12. SECURITY CONSIDERATIONS
+================================================================================
+
+Firebase Security Rules:
+────────────────────────
+{
+  "rules": {
+    "devices": {
+      "$deviceId": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
+    "users": {
+      "$userId": {
+        ".read": "$userId === auth.uid",
+        ".write": "$userId === auth.uid"
+      }
+    }
+  }
+}
+
+Vercel Environment Variables:
+─────────────────────────────
+- FIREBASE_PROJECT_ID
+- FIREBASE_CLIENT_EMAIL
+- FIREBASE_PRIVATE_KEY
+- NEXT_PUBLIC_FIREBASE_API_KEY
+- NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+
+Arduino Security:
+─────────────────
+- Use HTTPS for all requests (WiFiClientSecure)
+- Store Firebase secrets in SPIFFS (not hardcoded)
+- Implement device authentication token
+
+================================================================================
+13. PROJECT FOLDER STRUCTURE
+================================================================================
+
+medication-reminder/
+├── arduino/                      (Current Arduino project)
+│   ├── src/main.cpp             (KEEP LOGIC INTACT)
+│   ├── platformio.ini
+│   └── wokwi.toml
+│
+└── dashboard/                    (NEW Next.js project)
+    ├── app/
+    │   ├── layout.tsx
+    │   ├── page.tsx             (Home dashboard)
+    │   ├── alarms/
+    │   │   └── page.tsx
+    │   ├── history/
+    │   │   └── page.tsx
+    │   ├── stats/
+    │   │   └── page.tsx
+    │   ├── settings/
+    │   │   └── page.tsx
+    │   └── api/
+    │       ├── alarms/
+    │       │   └── route.ts
+    │       ├── logs/
+    │       │   └── route.ts
+    │       └── status/
+    │           └── route.ts
+    ├── components/
+    │   ├── ui/                   (shadcn components)
+    │   ├── AlarmCard.tsx
+    │   ├── StatusIndicator.tsx
+    │   ├── LogTable.tsx
+    │   └── StatChart.tsx
+    ├── lib/
+    │   ├── firebase-admin.ts    (Server-side Firebase)
+    │   └── firebase-client.ts   (Client-side Firebase)
+    ├── types/
+    │   └── index.ts             (TypeScript types)
+    ├── public/
+    ├── .env.local               (Firebase secrets - NOT committed)
+    ├── package.json
+    ├── tailwind.config.ts
+    └── tsconfig.json
+
+================================================================================
+14. TIMELINE ESTIMATE
+================================================================================
+
+Week 1: Setup & Core Dashboard
+  - Initialize Next.js project
+  - Set up Firebase
+  - Build basic layout and navigation
+  - Implement alarms page
+
+Week 2: History & Statistics
+  - Build history/logs page
+  - Implement filtering and search
+  - Create statistics charts
+  - Add export functionality
+
+Week 3: API & Integration
+  - Develop all API routes
+  - Connect frontend to backend
+  - Test with manual Firebase data
+  - Deploy to Vercel
+
+Week 4: Testing & Polish
+  - Responsive design testing
+  - Bug fixes
+  - Performance optimization
+  - Documentation
+
+Future (When ESP32 Arrives):
+  - Arduino WiFi integration
+  - End-to-end testing
+  - Production deployment
+
+================================================================================
+END OF ARCHITECTURAL DESIGN DOCUMENT
+================================================================================
+
+Next Steps: Begin Phase 1 development - Create Next.js project structure

@@ -2,7 +2,14 @@
   "permissions": {
     "allow": [
       "Bash(pio run:*)",
-      "Bash(platformio run:*)"
+      "Bash(platformio run:*)",
+      "Bash(npx create-next-app:*)",
+      "Bash(npm init:*)",
+      "Bash(npm install:*)",
+      "Bash(npx tailwindcss:*)",
+      "Bash(npx tailwindcss@latest init:*)",
+      "Bash(npm run dev)",
+      "Bash(npm uninstall:*)"
     ],
     "deny": [],
     "ask": []

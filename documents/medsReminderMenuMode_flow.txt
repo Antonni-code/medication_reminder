@@ -1,20 +1,94 @@
-User presses SET button
+SMART MEDICATION REMINDER - MENU MODE FLOW
+==========================================
+
+User presses SET button from main screen
   ↓
-[Screen shows: "SET MORNING TIME"]
-Up/Down button to select (MORNING, AFTERNOON, EVENING)
+┌─────────────────────────────────────────┐
+│            MENU MODE ENTERED            │
+│     "SETTINGS" shown on display         │
+└─────────────────────────────────────────┘
   ↓
-Press SET to move to hours
+[Screen shows menu options:]
+  > Set Morning Time
+    Set Afternoon Time
+    Set Evening Time
+    Exit
   ↓
-UP button = increase hour
-DOWN button = decrease hour
+┌─────────────────────────────────────────┐
+│         MENU NAVIGATION                 │
+└─────────────────────────────────────────┘
   ↓
-Press SET to move to minutes
+UP button = Move cursor up
+DOWN button = Move cursor down
+SET button = Select highlighted option
+HOME button = Exit menu WITHOUT saving (return to main screen)
   ↓
-UP button = increase minute
-DOWN button = decrease minute
+User selects "Set Morning Time"
   ↓
-Press SET to save
+┌─────────────────────────────────────────┐
+│         HOUR ADJUSTMENT                 │
+│    Screen: "MORNING: [08]:00"           │
+│              ^^^ blinking               │
+└─────────────────────────────────────────┘
   ↓
-[Back to main screen]
+UP button = Increase hour (wraps 23→0)
+DOWN button = Decrease hour (wraps 0→23)
+SET button = Confirm hour, move to minutes
+HOME button = Cancel and return to menu (no save)
+  ↓
+User presses SET
+  ↓
+┌─────────────────────────────────────────┐
+│        MINUTE ADJUSTMENT                │
+│    Screen: "MORNING: 08:[00]"           │
+│                        ^^^ blinking     │
+└─────────────────────────────────────────┘
+  ↓
+UP button = Increase minute (wraps 59→0)
+DOWN button = Decrease minute (wraps 0→59)
+SET button = Save time and return to menu
+HOME button = Cancel and return to menu (no save)
+  ↓
+User presses SET
+  ↓
+[Time saved to EEPROM]
+[Brief "Saved!" confirmation]
+[Return to menu]
   ↓
 (Repeat for Afternoon and Evening times)
+  ↓
+User selects "Exit" OR presses HOME
+  ↓
+[Return to main monitoring screen]
+
+
+BUTTON SUMMARY (MENU MODE):
+===========================
+• UP (D10):      Navigate up / Increase value
+• DOWN (D11):    Navigate down / Decrease value
+• SET (D12):     Select / Confirm / Save
+• HOME (A0):     Exit without saving / Cancel / Back
+• CONFIRM (D13): (No function in menu mode)
+
+
+MENU STRUCTURE:
+===============
+Main Menu
+├── Set Morning Time
+│   ├── Hour (00-23)
+│   └── Minute (00-59)
+├── Set Afternoon Time
+│   ├── Hour (00-23)
+│   └── Minute (00-59)
+├── Set Evening Time
+│   ├── Hour (00-23)
+│   └── Minute (00-59)
+└── Exit
+
+
+HOME BUTTON BEHAVIOR:
+=====================
+• From menu list:      Return to main screen
+• During hour edit:    Cancel, return to menu (time unchanged)
+• During minute edit:  Cancel, return to menu (time unchanged)
+• Quick escape:        Press HOME anytime to abort changes

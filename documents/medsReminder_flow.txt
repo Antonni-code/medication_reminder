@@ -1,30 +1,71 @@
+SMART MEDICATION REMINDER - MAIN OPERATION FLOW
+================================================
+
 START
+  ↓
+[Power ON via hardware switch]
   ↓
 [Default alarm times loaded: Morning 8AM, Afternoon 1PM, Evening 8PM]
   ↓
 [Arduino checks time every second]
   ↓
-Is SET button pressed? ──YES──> Go to MENU MODE
-  ↓ NO                           (see below)
+┌─────────────────────────────────────────┐
+│         MAIN MONITORING LOOP            │
+└─────────────────────────────────────────┘
+  ↓
+Is SET button pressed? ──YES──> Go to MENU MODE (see menu flow)
+  ↓ NO
+  ↓
+Is HOME button pressed? ──YES──> Refresh display / Wake from sleep
+  ↓ NO
   ↓
 Is it time for any dose? (Morning/Afternoon/Evening)
-  ↓ NO → Display next dose time, keep checking
+  ↓ NO → Display next dose time on OLED
+  │       Show current day LED solid
+  │       Keep checking...
   ↓ YES
   ↓
-[ALARM TRIGGERED!]
+┌─────────────────────────────────────────┐
+│           ALARM TRIGGERED!              │
+└─────────────────────────────────────────┘
   ↓
-[Today's LED blinks] (e.g., Wednesday = LED #3)
-[Buzzer beeps]
-[Screen shows: "TAKE AFTERNOON DOSE!"]
+[Today's LED blinks] (e.g., Wednesday = LED on pin D4)
+[Buzzer beeps pattern]
+[Screen shows: "TAKE [MORNING/AFTERNOON/EVENING] DOSE!"]
   ↓
-Wait for CONFIRM button...
+┌─────────────────────────────────────────┐
+│         WAITING FOR RESPONSE            │
+└─────────────────────────────────────────┘
   ↓
-CONFIRM pressed? ──YES──> Turn off alarm
-  ↓ NO                     Log "taken"
-  ↓                        Show next dose
-Wait 15 minutes          Return to monitoring
+CONFIRM pressed? ──YES──> [Turn off alarm]
+  ↓ NO                     [Log "TAKEN" with timestamp]
+  ↓                        [LED solid for 2 seconds]
+  ↓                        [Show "Good job!" message]
+  ↓                        [Display next dose time]
+  ↓                        [Return to monitoring]
   ↓
-Still no button? ──YES──> Log "MISSED DOSE"
-  ↓                        Turn off alarm
-  ↓                        Return to monitoring
+Wait up to 15 minutes (reminder window)
+  ↓
+Still no CONFIRM? ──YES──> [Log "MISSED DOSE" with timestamp]
+  ↓                         [Turn off alarm]
+  ↓                         [LED stays off]
+  ↓                         [Show "Dose missed" briefly]
+  ↓                         [Return to monitoring]
+  ↓
 REPEAT DAILY
+
+
+BUTTON SUMMARY (MAIN MODE):
+===========================
+• CONFIRM (D13): Acknowledge medication taken
+• SET (D12):     Enter menu mode
+• HOME (A0):     Refresh display / Wake screen
+• UP (D10):      (No function in main mode)
+• DOWN (D11):    (No function in main mode)
+
+
+HARDWARE SWITCH:
+================
+• ON/OFF Switch: Physical power control - cuts all power to system
+                 Located in 5V line before Arduino
+                 No software control needed
