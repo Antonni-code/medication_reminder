@@ -9,7 +9,18 @@
       "Bash(npx tailwindcss:*)",
       "Bash(npx tailwindcss@latest init:*)",
       "Bash(npm run dev)",
-      "Bash(npm uninstall:*)"
+      "Bash(npm uninstall:*)",
+      "Bash(where:*)",
+      "mcp__ide__getDiagnostics",
+      "Bash(cat:*)",
+      "Bash(for r in r1 r2 r3 r4 r5 r6 r7 r8 r9 r10 r11 r12)",
+      "Bash(do echo -n \"$r: \")",
+      "Bash(done)",
+      "Bash(taskkill:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr :3000)",
+      "Bash(findstr:*)",
+      "Bash(if exist .nextdev rmdir /S /Q .nextdev)"
     ],
     "deny": [],
     "ask": []
