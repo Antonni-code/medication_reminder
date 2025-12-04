@@ -386,8 +386,25 @@ Rows 55-63:  LED1 (Cyan/Saturday)   → Pin 8
 
 ## Important Notes
 
+### Component Physical Placement
+
+**In Real Life:**
+- **LED resistors (r1-r7)**: Insert both legs directly into breadboard holes
+- **Pull-up resistors (r8-r12)**: Use **female-to-male jumper wires** to connect resistor legs to breadboard holes and power rails
+  - This is a realistic beginner approach - resistors can "float" if connected with jumper wires
+  - Advanced: You can also insert them directly into breadboard, but jumper wires are easier for beginners
+- **Buttons**: Should be placed on the breadboard with all 4 legs inserted into holes (or use jumper wires from button pins to breadboard)
+- **All connections must be secure** - use jumper wires where needed
+
+**In Wokwi Simulation:**
+- Pull-up resistors (r8-r12) use jumper wires (yellow and lime green) to connect to breadboard
+- This matches real-world beginner setups where jumper wires connect components
+- Buttons may appear separate from the breadboard for easier clicking during simulation
+- The WIRING connections are 100% realistic - this is exactly how beginners would wire it
+
 ### Pull-up Resistors
 - All buttons use **external 10kΩ pull-up resistors**
+- Resistors are physically placed on breadboard (horizontal orientation)
 - Buttons are read as LOW when pressed, HIGH when released
 - Code uses `INPUT` mode (not `INPUT_PULLUP`)
 

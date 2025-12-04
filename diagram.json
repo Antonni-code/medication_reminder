@@ -151,33 +151,33 @@
     {
       "type": "wokwi-resistor",
       "id": "r8",
-      "top": 569.8,
-      "left": 546.35,
-      "rotate": 270,
+      "top": 829.55,
+      "left": 460.8,
+      "rotate": 0,
       "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r9",
-      "top": 454.6,
-      "left": 575.15,
-      "rotate": 270,
+      "top": 829.55,
+      "left": 547.2,
+      "rotate": 0,
       "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r11",
-      "top": 368.2,
-      "left": 565.55,
-      "rotate": 270,
+      "top": 829.55,
+      "left": 633.6,
+      "rotate": 0,
       "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r12",
-      "top": 665.8,
-      "left": 555.95,
-      "rotate": 270,
+      "top": 829.55,
+      "left": 720,
+      "rotate": 0,
       "attrs": { "value": "10000" }
     },
     { "type": "wokwi-slide-switch", "id": "sw1", "top": 465.2, "left": 828.7, "attrs": {} },
@@ -191,9 +191,9 @@
     {
       "type": "wokwi-resistor",
       "id": "r10",
-      "top": 665.8,
-      "left": 805.55,
-      "rotate": 270,
+      "top": 829.55,
+      "left": 806.4,
+      "rotate": 0,
       "attrs": { "value": "10000" }
     }
   ],

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Link from "next/link";
+import Footer from "@/components/footer";
 
 export const metadata: Metadata = {
   title: "Medication Reminder Dashboard",
@@ -10,11 +11,11 @@ export const metadata: Metadata = {
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.Node;
+  children: React.ReactNode;
 }>) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-gray-50">
+      <body className="min-h-screen bg-gray-50 flex flex-col">
         <nav className="bg-white shadow-sm border-b">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between h-16">
@@ -53,9 +54,10 @@ export default function RootLayout({
             </div>
           </div>
         </nav>
-        <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <main className="flex-1 max-w-7xl w-full mx-auto py-6 sm:px-6 lg:px-8">
           {children}
         </main>
+        <Footer />
       </body>
     </html>
   );
