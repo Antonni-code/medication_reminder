@@ -20,7 +20,11 @@
       "Bash(netstat:*)",
       "Bash(findstr :3000)",
       "Bash(findstr:*)",
-      "Bash(if exist .nextdev rmdir /S /Q .nextdev)"
+      "Bash(if exist .nextdev rmdir /S /Q .nextdev)",
+      "Bash(npx prisma init)",
+      "Bash(node -e:*)",
+      "Bash(npx prisma migrate:*)",
+      "Bash(npx prisma generate)"
     ],
     "deny": [],
     "ask": []

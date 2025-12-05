@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Link from "next/link";
 import Footer from "@/components/footer";
+import { Providers } from "@/components/providers";
+import { Navbar } from "@/components/navbar";
 
 export const metadata: Metadata = {
   title: "Medication Reminder Dashboard",
@@ -15,50 +17,24 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-gray-50 flex flex-col">
-        <nav className="bg-white shadow-sm border-b">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between h-16">
-              <div className="flex space-x-8">
-                <Link
-                  href="/"
-                  className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 border-b-2 border-transparent hover:border-blue-500"
-                >
-                  Dashboard
-                </Link>
-                <Link
-                  href="/alarms"
-                  className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 border-b-2 border-transparent hover:border-blue-500"
-                >
-                  Alarms
-                </Link>
-                <Link
-                  href="/history"
-                  className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 border-b-2 border-transparent hover:border-blue-500"
-                >
-                  History
-                </Link>
-                <Link
-                  href="/stats"
-                  className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 border-b-2 border-transparent hover:border-blue-500"
-                >
-                  Statistics
-                </Link>
-                <Link
-                  href="/settings"
-                  className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 border-b-2 border-transparent hover:border-blue-500"
-                >
-                  Settings
-                </Link>
-              </div>
-            </div>
-          </div>
-        </nav>
-        <main className="flex-1 max-w-7xl w-full mx-auto py-6 sm:px-6 lg:px-8">
-          {children}
-        </main>
-        <Footer />
+      <body className="min-h-screen flex flex-col">
+        <Providers>
+          <Navbar />
+          <main className="flex-1">{children}</main>
+          <Footer />
+        </Providers>
       </body>
     </html>
+  );
+}
+
+function NavLink({ href, label }: { href: string; label: string }) {
+  return (
+    <Link
+      href={href}
+      className="px-5 py-2.5 text-sm font-semibold text-gray-700 hover:text-[#EF7722] hover:bg-[#FFF5ED] rounded-lg transition-all"
+    >
+      {label}
+    </Link>
   );
 }

@@ -95,6 +95,105 @@ void loadAlarms()
   }
 }
 
+// ==================== SERIAL COMMUNICATION ====================
+// LEARNING NOTE: Serial communication allows Arduino to talk to computer/website
+// Commands format: "COMMAND:param1:param2:param3"
+// This lets us control Arduino from the dashboard!
+
+void handleSerialCommands()
+{
+  if (Serial.available() > 0)
+  {
+    String command = Serial.readStringUntil('\n');
+    command.trim(); // Remove whitespace
+
+    // GET_ALARMS - Send all alarm data to website
+    if (command == "GET_ALARMS")
+    {
+      // Format: ALARMS:hour1:min1:enabled1:hour2:min2:enabled2:hour3:min3:enabled3
+      Serial.print(F("ALARMS:"));
+      for (uint8_t i = 0; i < 3; i++)
+      {
+        Serial.print(alarms[i].hour);
+        Serial.print(':');
+        Serial.print(alarms[i].minute);
+        Serial.print(':');
+        Serial.print(alarms[i].enabled ? 1 : 0);
+        if (i < 2)
+          Serial.print(':');
+      }
+      Serial.println();
+    }
+    // SET_ALARM:index:hour:minute - Update specific alarm
+    // Example: "SET_ALARM:0:9:30" sets Morning alarm to 9:30 AM
+    else if (command.startsWith("SET_ALARM:"))
+    {
+      // Parse the command
+      int firstColon = command.indexOf(':', 10);
+      int secondColon = command.indexOf(':', firstColon + 1);
+      int thirdColon = command.indexOf(':', secondColon + 1);
+
+      uint8_t index = command.substring(10, firstColon).toInt();
+      uint8_t hour = command.substring(firstColon + 1, secondColon).toInt();
+      uint8_t minute = command.substring(secondColon + 1).toInt();
+
+      // Validate input
+      if (index < 3 && hour < 24 && minute < 60)
+      {
+        alarms[index].hour = hour;
+        alarms[index].minute = minute;
+        saveAlarms(); // Save to EEPROM immediately!
+
+        Serial.print(F("OK:"));
+        Serial.print(index);
+        Serial.print(':');
+        Serial.print(hour);
+        Serial.print(':');
+        Serial.println(minute);
+      }
+      else
+      {
+        Serial.println(F("ERROR:INVALID_PARAMS"));
+      }
+    }
+    // TOGGLE_ALARM:index - Enable/disable alarm
+    else if (command.startsWith("TOGGLE_ALARM:"))
+    {
+      uint8_t index = command.substring(13).toInt();
+      if (index < 3)
+      {
+        alarms[index].enabled = !alarms[index].enabled;
+        saveAlarms();
+        Serial.print(F("OK:"));
+        Serial.print(index);
+        Serial.print(':');
+        Serial.println(alarms[index].enabled ? 1 : 0);
+      }
+      else
+      {
+        Serial.println(F("ERROR:INVALID_INDEX"));
+      }
+    }
+    // GET_STATUS - Get system status (online/offline, current time, etc)
+    else if (command == "GET_STATUS")
+    {
+      DateTime now = rtc.now();
+      Serial.print(F("STATUS:"));
+      Serial.print(systemPowered ? 1 : 0);
+      Serial.print(':');
+      Serial.print(now.hour());
+      Serial.print(':');
+      Serial.print(now.minute());
+      Serial.print(':');
+      Serial.println(now.dayOfTheWeek());
+    }
+    else
+    {
+      Serial.println(F("ERROR:UNKNOWN_COMMAND"));
+    }
+  }
+}
+
 // ==================== BUTTON FUNCTIONS ====================
 bool btnPressed(uint8_t pin)
 {
@@ -564,6 +663,9 @@ void setup()
 // ==================== MAIN LOOP ====================
 void loop()
 {
+  // Handle serial commands from website (ALWAYS check, even when powered off)
+  handleSerialCommands();
+
   // POWER SWITCH: Read current state (slide switch stays in position)
   bool currentSwitchState = digitalRead(powerswitch);
 
