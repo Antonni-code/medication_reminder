@@ -24,7 +24,8 @@
       "Bash(npx prisma init)",
       "Bash(node -e:*)",
       "Bash(npx prisma migrate:*)",
-      "Bash(npx prisma generate)"
+      "Bash(npx prisma generate)",
+      "Bash(npx prisma studio)"
     ],
     "deny": [],
     "ask": []

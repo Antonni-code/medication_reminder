@@ -3,9 +3,11 @@
 import Link from 'next/link'
 import { useSession, signOut } from 'next-auth/react'
 import { useState, useRef, useEffect } from 'react'
+import { usePathname } from 'next/navigation'
 
 export function Navbar() {
   const { data: session } = useSession()
+  const pathname = usePathname()
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
@@ -39,10 +41,10 @@ export function Navbar() {
 
           {/* Nav Links & User Menu */}
           <div className="flex items-center gap-2">
-            <NavLink href="/" label="Dashboard" />
-            <NavLink href="/alarms" label="Alarms" />
-            <NavLink href="/stats" label="Statistics" />
-            <NavLink href="/settings" label="Settings" />
+            <NavLink href="/" label="Dashboard" active={pathname === '/'} />
+            <NavLink href="/alarms" label="Alarms" active={pathname === '/alarms'} />
+            <NavLink href="/stats" label="Statistics" active={pathname === '/stats'} />
+            <NavLink href="/settings" label="Settings" active={pathname === '/settings'} />
 
             {/* User Profile Dropdown */}
             {session?.user && (
@@ -105,11 +107,15 @@ export function Navbar() {
   )
 }
 
-function NavLink({ href, label }: { href: string; label: string }) {
+function NavLink({ href, label, active }: { href: string; label: string; active?: boolean }) {
   return (
     <Link
       href={href}
-      className="px-5 py-2.5 text-sm font-semibold text-gray-700 hover:text-[#EF7722] hover:bg-[#FFF5ED] rounded-lg transition-all"
+      className={`px-5 py-2.5 text-sm font-semibold rounded-lg transition-all ${
+        active
+          ? 'text-[#EF7722] bg-[#FFF5ED]'
+          : 'text-gray-700 hover:text-[#EF7722] hover:bg-[#FFF5ED]'
+      }`}
     >
       {label}
     </Link>
