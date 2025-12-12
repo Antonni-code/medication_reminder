@@ -4,6 +4,7 @@ import Link from "next/link";
 import Footer from "@/components/footer";
 import { Providers } from "@/components/providers";
 import { Navbar } from "@/components/navbar";
+import NotificationScheduler from "@/components/NotificationScheduler";
 
 export const metadata: Metadata = {
   title: "Medication Reminder Dashboard",
@@ -19,6 +20,7 @@ export default function RootLayout({
     <html lang="en">
       <body className="min-h-screen flex flex-col">
         <Providers>
+          <NotificationScheduler />
           <Navbar />
           <main className="flex-1">{children}</main>
           <Footer />

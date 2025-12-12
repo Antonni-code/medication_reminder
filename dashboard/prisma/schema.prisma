@@ -52,10 +52,15 @@ model User {
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @updatedAt @map("updated_at")
 
+  // Email notification settings
+  emailNotificationsEnabled Boolean @default(true) @map("email_notifications_enabled")
+  notificationDelayMinutes  Int     @default(15)   @map("notification_delay_minutes") // Send email N minutes after missed dose
+
   accounts      Account[]
   sessions      Session[]
   alarms        Alarm[]
   adherenceLog  AdherenceLog[]
+  notifications EmailNotification[]
 
   @@map("users")
 }
@@ -107,4 +112,21 @@ model AdherenceLog {
 
   @@index([userId, scheduledTime])
   @@map("adherence_logs")
+}
+
+// Track sent email notifications to prevent duplicates
+model EmailNotification {
+  id            String   @id @default(cuid())
+  userId        String   @map("user_id")
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  alarmIndex    Int      @map("alarm_index") // Which alarm (0, 1, 2)
+  scheduledTime DateTime @map("scheduled_time") // The missed dose time
+  sentAt        DateTime @default(now()) @map("sent_at") // When the email was sent
+  emailType     String   @map("email_type") // "missed_dose", "reminder", etc.
+  success       Boolean  @default(true) // Whether email was sent successfully
+
+  @@index([userId, alarmIndex, scheduledTime])
+  @@unique([userId, alarmIndex, scheduledTime, emailType]) // Prevent duplicate notifications
+  @@map("email_notifications")
 }

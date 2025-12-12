@@ -25,7 +25,10 @@
       "Bash(node -e:*)",
       "Bash(npx prisma migrate:*)",
       "Bash(npx prisma generate)",
-      "Bash(npx prisma studio)"
+      "Bash(npx prisma studio)",
+      "Bash(timeout:*)",
+      "Bash(npx tsc:*)",
+      "Bash(if exist .next rmdir /S /Q .next)"
     ],
     "deny": [],
     "ask": []
